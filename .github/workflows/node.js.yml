@@ -48,4 +48,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: datasaur-application:${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
+        tags: yesa/datasaur-application:${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
