@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKERFILE_URL: https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/Dockerfile
+    outputs:
+      DOCKER_IMAGE_TAG: ${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
     strategy:
       matrix:
         node-version: [15.x]
@@ -36,6 +38,10 @@ jobs:
 #         username: ${{ secrets.DOCKERHUB_USERNAME }}
 #         password: ${{ secrets.DOCKERHUB_PASSWORD }}
         
+    - name: Get the commit hash and output it for Docker image tag
+      id: GET_DOCKER_IMAGE_TAG
+      run: echo "::set-output name=DOCKER_IMAGE_TAG::$(git rev-parse --short '$GITHUB_SHA')"
+        
     - name: Download Dockerfile
       run: curl ${{ env.DOCKERFILE_URL }} --output Dockerfile
         
@@ -44,4 +50,4 @@ jobs:
       with:
         context: .
         push: false
-        tags: datasaur-application:latest
+        tags: datasaur-application:${{ outputs.DOCKER_IMAGE_TAG }}
