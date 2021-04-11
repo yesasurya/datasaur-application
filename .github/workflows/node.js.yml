@@ -38,7 +38,7 @@ jobs:
         
     - name: Get the commit hash and output it for Docker image tag
       id: GET_DOCKER_IMAGE_TAG
-      run: echo "::set-output name=DOCKER_IMAGE_TAG::$(git rev-parse --short '$GITHUB_SHA')"
+      run: echo "::set-output name=DOCKER_IMAGE_TAG::$(git rev-parse --short $GITHUB_SHA)"
         
     - name: Download Dockerfile
       run: curl ${{ env.DOCKERFILE_URL }} --output Dockerfile
