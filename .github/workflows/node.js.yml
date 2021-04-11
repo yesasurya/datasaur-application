@@ -14,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKERFILE_URL: https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/Dockerfile
-    outputs:
       DOCKER_IMAGE_TAG: ${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
     strategy:
       matrix:
@@ -50,4 +49,4 @@ jobs:
       with:
         context: .
         push: false
-        tags: datasaur-application:${{ outputs.DOCKER_IMAGE_TAG }}
+        tags: datasaur-application:${{ env.DOCKER_IMAGE_TAG }}
