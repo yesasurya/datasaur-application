@@ -60,7 +60,7 @@ jobs:
       run: |
         #Set cluster
         kubectl config set-cluster datasaur-cluster \
-        --server=https://datasaur-cluster:6443
+        --server=https://datasaur-cluster.yesasurya.com:6443
         kubectl config set clusters.datasaur-cluster.certificate-authority-data ${{ secrets.K8S_CERTIFICATE_AUTHORITY_DATA }}
         
         #Set user
