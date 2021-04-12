@@ -81,7 +81,7 @@ jobs:
         
         #Substitute the $DOCKER_IMAGE_TAG
         export DOCKER_IMAGE_TAG=${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
-        envsubst < dep-datasaur-application.yaml
+        envsubst < dep-datasaur-application.yaml | tee dep-datasaur-application.yaml
         
         #Apply the deployment file
         kubectl apply -f dep-datasaur-application.yaml --record
