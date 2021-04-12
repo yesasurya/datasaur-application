@@ -52,3 +52,37 @@ jobs:
         context: .
         push: true
         tags: yesa/datasaur-application:${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
+        
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v1
+      
+    - name: Setup kubectl configuration
+      run: |
+        #Set cluster
+        kubectl config set-cluster datasaur-cluster \
+        --server=https://datasaur-cluster:6443
+        kubectl config set clusters.datasaur-cluster.certificate-authority-data ${{ secrets.K8S_CERTIFICATE_AUTHORITY_DATA }}
+        
+        #Set user
+        kubectl config set-credentials devops \
+        --token=${{ secrets.K8S_TOKEN }}
+        
+        #Set context and current context
+        kubectl config set-context context-devops \
+        --cluster=datasaur-cluster \
+        --user=devops \
+        --namespace=datasaur
+        kubectl config use-context context-devops
+        
+    - name: Deploy to k8s
+      run: |
+        #Download deployment file of Datasaur application
+        curl https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/dep-datasaur-application.yaml --output dep-datasaur-application.yaml
+        
+        #Substitute the $DOCKER_IMAGE_TAG
+        export DOCKER_IMAGE_TAG=${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
+        envsubst < dep-datasaur-application.yaml
+        
+        #Apply the deployment file
+        kubectl apply -f dep-datasaur-application.yaml --record
+      
