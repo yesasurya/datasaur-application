@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKERFILE_URL: https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/Dockerfile
-      DEPLOYMENT_FILE_URL: https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/dep-datasaur-application.yaml
+      DEPLOYMENT_FILE_URL: https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/k8s-manifests/dep-datasaur.yaml
     strategy:
       matrix:
         node-version: [15.x]
