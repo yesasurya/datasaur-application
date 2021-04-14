@@ -80,10 +80,10 @@ jobs:
         curl ${{ env.DEPLOYMENT_FILE_URL }} --output temp.yaml
         curl ${{ env.SERVICE_FILE_URL }} --output temp2.yaml
         
-        
         #Substitute the $DOCKER_IMAGE_TAG
         export DOCKER_IMAGE_TAG=${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
         export DEV_OR_RELEASE=release-${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
+        export RELEASE_TAG=${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
         envsubst < temp.yaml | tee dep-datasaur.yaml
         envsubst < temp2.yaml | tee svc-datasaur.yaml
         
