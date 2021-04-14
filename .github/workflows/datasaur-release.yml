@@ -1,0 +1,88 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Datasaur Application CI - Release (Blue/Green Deployment)
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOCKERFILE_URL: https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/Dockerfile
+      DEPLOYMENT_FILE_URL: https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/dep-datasaur-application.yaml
+    strategy:
+      matrix:
+        node-version: [15.x]
+        
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+        
+    - name: Run necessary setup(s)
+      run: npm install
+        
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+      
+    - name: Login to DockerHub
+      uses: docker/login-action@v1 
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+        
+    - name: Get the commit hash and output it for Docker image tag
+      id: GET_DOCKER_IMAGE_TAG
+      run: echo "::set-output name=DOCKER_IMAGE_TAG::$(git rev-parse --short $GITHUB_REF)"
+        
+    - name: Download Dockerfile
+      run: curl ${{ env.DOCKERFILE_URL }} --output Dockerfile
+        
+    - name: Build the Docker image and Push
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: yesa/datasaur-application:${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
+        
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v1
+      
+    - name: Setup kubectl configuration
+      run: |
+        #Set cluster
+        kubectl config set-cluster datasaur-cluster \
+        --server=${{ secrets.K8S_URL }}
+        kubectl config set clusters.datasaur-cluster.certificate-authority-data ${{ secrets.K8S_CERTIFICATE_AUTHORITY_DATA }}
+        
+        #Set user
+        kubectl config set-credentials devops \
+        --token=${{ secrets.K8S_TOKEN }}
+        
+        #Set context and current context
+        kubectl config set-context context-devops \
+        --cluster=datasaur-cluster \
+        --user=devops \
+        --namespace=datasaur
+        kubectl config use-context context-devops
+        
+    - name: Deploy to k8s
+      run: |
+        #Download deployment file of Datasaur application
+        curl ${{ env.DEPLOYMENT_FILE_URL }} --output dep-datasaur-application.yaml
+        
+        #Substitute the $DOCKER_IMAGE_TAG
+        export DOCKER_IMAGE_TAG=${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
+        export DEV_OR_RELEASE=release
+        envsubst < dep-datasaur-application.yaml | tee dep-datasaur-application.yaml
+        
+        #Apply the deployment file
+        kubectl apply -f dep-datasaur-application.yaml --record
+      
