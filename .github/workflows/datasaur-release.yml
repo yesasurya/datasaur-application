@@ -76,14 +76,18 @@ jobs:
         
     - name: Deploy to k8s
       run: |
-        #Download deployment file of Datasaur application
-        curl ${{ env.DEPLOYMENT_FILE_URL }} --output dep-datasaur.yaml
+        #Download deployment and service file of Datasaur application
+        curl ${{ env.DEPLOYMENT_FILE_URL }} --output temp.yaml
+        curl ${{ env.SERVICE_FILE_URL }} --output temp2.yaml
+        
         
         #Substitute the $DOCKER_IMAGE_TAG
         export DOCKER_IMAGE_TAG=${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
         export DEV_OR_RELEASE=release-${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
-        envsubst < dep-datasaur.yaml | tee dep-datasaur.yaml
+        envsubst < temp.yaml | tee dep-datasaur.yaml
+        envsubst < temp2.yaml | tee svc-datasaur.yaml
         
-        #Apply the deployment file
+        #Apply the deployment and service file
         kubectl apply -f dep-datasaur.yaml --record
+        kubectl apply -f svc-datasaur.yaml
       
