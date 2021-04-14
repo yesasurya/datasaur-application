@@ -85,8 +85,6 @@ jobs:
         export DEV_OR_RELEASE=dev
         envsubst < dep-datasaur.yaml | tee dep-datasaur.yaml
         
-        cat dep-datasaur.yaml
-        
         #Apply the deployment file
-        #kubectl apply -f dep-datasaur.yaml --record
+        kubectl apply -f dep-datasaur.yaml --record
       
