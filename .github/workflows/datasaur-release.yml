@@ -12,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKERFILE_URL: https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/Dockerfile
-      DEPLOYMENT_FILE_URL: https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/dep-datasaur-application.yaml
+      DEPLOYMENT_FILE_URL: https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/k8s-manifests/dep-datasaur.yaml
+      SERVICE_FILE_URL: https://raw.githubusercontent.com/yesasurya/datasaur-devops/main/k8s-manifests/svc-datasaur-release.yaml
     strategy:
       matrix:
         node-version: [15.x]
@@ -40,7 +41,7 @@ jobs:
         
     - name: Get the commit hash and output it for Docker image tag
       id: GET_DOCKER_IMAGE_TAG
-      run: echo "::set-output name=DOCKER_IMAGE_TAG::$(git rev-parse --short $GITHUB_REF)"
+      run: echo "::set-output name=DOCKER_IMAGE_TAG::$GITHUB_REF"
         
     - name: Download Dockerfile
       run: curl ${{ env.DOCKERFILE_URL }} --output Dockerfile
@@ -76,13 +77,13 @@ jobs:
     - name: Deploy to k8s
       run: |
         #Download deployment file of Datasaur application
-        curl ${{ env.DEPLOYMENT_FILE_URL }} --output dep-datasaur-application.yaml
+        curl ${{ env.DEPLOYMENT_FILE_URL }} --output dep-datasaur.yaml
         
         #Substitute the $DOCKER_IMAGE_TAG
         export DOCKER_IMAGE_TAG=${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
-        export DEV_OR_RELEASE=release
-        envsubst < dep-datasaur-application.yaml | tee dep-datasaur-application.yaml
+        export DEV_OR_RELEASE=release-${{ steps.GET_DOCKER_IMAGE_TAG.outputs.DOCKER_IMAGE_TAG }}
+        envsubst < dep-datasaur.yaml | tee dep-datasaur.yaml
         
         #Apply the deployment file
-        kubectl apply -f dep-datasaur-application.yaml --record
+        kubectl apply -f dep-datasaur.yaml --record
       
